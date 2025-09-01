@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Get Da Link Bestie</title>
+  <title>🎀 Birthday Chaos — Full</title>
   <style>
     :root{
       --pink:#ffd3ec; --hot:#ff3fa1; --white:#fff;
@@ -65,14 +65,15 @@
   </style>
 </head>
 <body>
-  <h1>🎀 You want the link, huh? Get it</h1>
-	
+  <h1>🎀 You want the link? Get it</h1>
+
+  <!-- Click Me (dodges up to 15 times) -->
   <button id="clickMe">Click Me 🤭</button>
 
   <!-- Name section -->
   <div id="nameSection">
     <div class="controlRow">
-      <input id="nameField" type="text" placeholder="ENTER YOUR NAME BITCH" autocomplete="off" />
+      <input id="nameField" type="text" placeholder="Type the name..." autocomplete="off" />
       <button id="submitName" class="btn">ENTER</button>
     </div>
     <div id="progressWrap">
@@ -97,10 +98,10 @@
 
   <script>
     /* CONFIG */
-    const CLICK_DODGE_LIMIT = 15;      // button dodges this many times
+    const CLICK_DODGE_LIMIT = 25;      // button dodges this many times
     const REQUIRED_NAME_COUNT = 15;    // must enter name this many times
     const TARGET_NAME = "shagun";      // lowercase assumed
-    const TYPEWRITER_TOTAL_SECONDS = 10; // user requested 10s overlay total
+    const TYPEWRITER_TOTAL_SECONDS = 15; // user requested 10s overlay total
 
     /* ELEMENTS */
     const clickBtn = document.getElementById('clickMe');
@@ -155,6 +156,7 @@
         e.style.top = (-10 - Math.random()*10) + 'vh';
         e.style.fontSize = (16 + Math.random()*28) + 'px';
         document.body.appendChild(e);
+        // simple fall animation via CSS transform using requestAnimationFrame
         const dur = 2200 + Math.random()*1600;
         e.animate([{ transform: `translateY(0vh)`, opacity: 1 }, { transform: `translateY(110vh)`, opacity: 0 }], { duration: dur, easing: 'linear' });
         setTimeout(()=> e.remove(), dur + 60);
@@ -203,7 +205,6 @@
         "Unlocking your surprise…",
         "Adding sparkles…",
         "Almost there…"
-		"Bas hogayaaaaaa"
       ];
 
       // Show overlay
@@ -269,10 +270,12 @@
     function revealFinal(){
       // show gift box
       giftBox.style.display = 'block';
+      // position photos randomly around (avoid overlapping center too much)
       placePhotoRandom(photoA);
       placePhotoRandom(photoB);
       photoA.style.display = 'block';
       photoB.style.display = 'block';
+      // tiny entrance sparkle burst
       spawnEmojiBurst(20);
     }
 
@@ -289,14 +292,17 @@
       // slight random rotation
       imgEl.style.transform = `rotate(${(Math.random()*24 - 12)}deg)`;
     }
-	  
+
+    /* init text */
     progressText.textContent = `0 / ${REQUIRED_NAME_COUNT}`;
 
+    /* accessibility: focus fields when visible */
     document.addEventListener('visibilitychange', ()=> {
       if(nameSection.style.display !== 'none') nameField.focus();
     });
+
+    // expose final link / photo placeholders note:
+    // Replace `YOUR_LINK_HERE`, `photo1.jpg`, `photo2.jpg` with your actual urls/files in HTML above.
   </script>
 </body>
 </html>
-
-

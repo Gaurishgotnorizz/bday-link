@@ -97,10 +97,10 @@
 
   <script>
     /* CONFIG */
-    const CLICK_DODGE_LIMIT = 25;      // button dodges this many times
+    const CLICK_DODGE_LIMIT = 15;      // button dodges this many times
     const REQUIRED_NAME_COUNT = 15;    // must enter name this many times
     const TARGET_NAME = "shagun";      // lowercase assumed
-    const TYPEWRITER_TOTAL_SECONDS = 15; // user requested 10s overlay total
+    const TYPEWRITER_TOTAL_SECONDS = 10; // user requested 10s overlay total
 
     /* ELEMENTS */
     const clickBtn = document.getElementById('clickMe');
@@ -155,7 +155,6 @@
         e.style.top = (-10 - Math.random()*10) + 'vh';
         e.style.fontSize = (16 + Math.random()*28) + 'px';
         document.body.appendChild(e);
-        // simple fall animation via CSS transform using requestAnimationFrame
         const dur = 2200 + Math.random()*1600;
         e.animate([{ transform: `translateY(0vh)`, opacity: 1 }, { transform: `translateY(110vh)`, opacity: 0 }], { duration: dur, easing: 'linear' });
         setTimeout(()=> e.remove(), dur + 60);
@@ -216,7 +215,7 @@
       // compute roughly how many chars total
       const totalChars = messages.reduce((s,m)=> s + m.length, 0);
       // decide per-char delay => allocate 75% of total seconds to typing, rest to pauses/fade
-      const typingSeconds = TYPEWRITER_TOTAL_SECONDS * 0.65;
+      const typingSeconds = TYPEWRITER_TOTAL_SECONDS * 0.75;
       const perCharMs = Math.max(40, Math.round((typingSeconds * 1000) / totalChars)); // not too small
       const pauseBetweenMs = Math.max(600, Math.round((TYPEWRITER_TOTAL_SECONDS*1000 - perCharMs*totalChars) / (messages.length))); // distribute pauses
 
@@ -299,4 +298,5 @@
   </script>
 </body>
 </html>
+
 

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🎀 Birthday Chaos — Full</title>
+  <style>
+    :root{
+      --pink:#ffd3ec; --hot:#ff3fa1; --white:#fff;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; font-family:"Comic Sans MS", "Poppins", cursive, sans-serif;}
+    body{
+      background: linear-gradient(135deg,#ffe4f1,#ffd3ec);
+      display:block; overflow:hidden; color:var(--hot);
+      text-align:center; padding:28px;
+    }
+
+    h1{font-size:clamp(1.6rem,3vw,2.4rem); margin:10px 0 18px; color:var(--hot)}
+    /* Click button */
+    #clickMe{
+      position:absolute; left:calc(50% - 80px); top:40%;
+      padding:14px 26px; background:linear-gradient(90deg,#ff8ed6,#ff69b4);
+      color:white; border:0; border-radius:28px; font-size:1.15rem; cursor:pointer;
+      box-shadow:0 8px 30px rgba(255,63,161,.18);
+    }
+
+    /* name input area */
+    #nameSection{ display:none; margin-top:12vh; }
+    .controlRow{ margin:10px 0; }
+    input[type="text"]{
+      padding:10px 14px; border-radius:12px; border:2px solid rgba(255,63,161,.2);
+      width:260px; font-size:1rem; outline:none; background:rgba(255,255,255,.9);
+    }
+    .btn{ padding:10px 16px; border-radius:12px; border:0; background:var(--hot); color:white; cursor:pointer; }
+
+    /* progress */
+    #progressWrap{ width:320px; height:14px; background:#fff; border:2px solid rgba(255,63,161,.18); border-radius:12px; margin:14px auto; overflow:hidden;}
+    #progressBar{ height:100%; width:0%; background:linear-gradient(90deg,#ff69b4,#ff3fa1); transition:width .25s ease; }
+
+    /* gift box (final) */
+    #giftBox{ display:none; margin:28px auto; padding:18px; background:#fff; border:3px dashed rgba(255,63,161,.35); border-radius:18px; width:min(720px,92%); color:#d32b6a; }
+    #giftBox a{ color:var(--hot); font-weight:800; text-decoration:none; }
+
+    /* photos (outside box) */
+    .photo{ position:absolute; width:140px; height:140px; object-fit:cover; border-radius:16px; border:3px solid rgba(255,63,161,.6); box-shadow:0 18px 40px rgba(255,63,161,.12); display:none; }
+
+    /* emojis */
+    .emoji{ position:fixed; font-size:1.8rem; pointer-events:none; user-select:none; filter:drop-shadow(0 4px 12px rgba(0,0,0,.12)); }
+
+    /* overlay fullscreen */
+    #overlay{
+      position:fixed; inset:0; background:linear-gradient(180deg, rgba(255,228,241,.98), rgba(255,211,236,.98));
+      display:none; align-items:center; justify-content:center; z-index:9999; flex-direction:column;
+    }
+    #loadingText{ font-size:2rem; color:var(--hot); border-right:3px solid var(--hot); padding:8px 14px; white-space:nowrap; overflow:hidden; }
+    .overlayEmoji{ position:absolute; font-size:2rem; opacity:.95; animation:floatUp 3s linear forwards; }
+    @keyframes floatUp { from{ transform:translateY(20vh) scale(.9);} to{ transform:translateY(-10vh) scale(1.05); opacity:0;} }
+
+    /* subtle responsiveness */
+    @media (max-width:520px){
+      #clickMe{ left:calc(50% - 70px); }
+      #progressWrap{ width:86%; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🎀 You want the link? Get it</h1>
+
+  <!-- Click Me (dodges up to 15 times) -->
+  <button id="clickMe">Click Me 🤭</button>
+
+  <!-- Name section -->
+  <div id="nameSection">
+    <div class="controlRow">
+      <input id="nameField" type="text" placeholder="Type the name..." autocomplete="off" />
+      <button id="submitName" class="btn">ENTER</button>
+    </div>
+    <div id="progressWrap">
+      <div id="progressBar"></div>
+    </div>
+    <div style="margin-top:6px; color:#b03578; font-weight:600;" id="progressText">0 / 10</div>
+  </div>
+
+  <!-- Overlay (fullscreen) for typewriter loading -->
+  <div id="overlay">
+    <div id="loadingText"></div>
+  </div>
+
+  <!-- Final gift box (no shake) -->
+  <div id="giftBox">
+    ✨ HERE IS THE LINKKK 👉 <a id="finalLink" href="https://gaurishgotnorizz.github.io/birthday-gift/" target="_blank" rel="noopener">CLICK THISSS 💅✨</a> ✨
+  </div>
+
+  <!-- Photos (outside the box, will be positioned randomly) -->
+  <img id="photoA" class="photo" src="pic1.jpg" alt="photoA">
+  <img id="photoB" class="photo" src="pic2.jpg" alt="photoB">
+
+  <script>
+    /* CONFIG */
+    const CLICK_DODGE_LIMIT = 15;      // button dodges this many times
+    const REQUIRED_NAME_COUNT = 10;    // must enter name this many times
+    const TARGET_NAME = "shagun";      // lowercase assumed
+    const TYPEWRITER_TOTAL_SECONDS = 10; // user requested 10s overlay total
+
+    /* ELEMENTS */
+    const clickBtn = document.getElementById('clickMe');
+    const nameSection = document.getElementById('nameSection');
+    const nameField = document.getElementById('nameField');
+    const submitName = document.getElementById('submitName');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const overlay = document.getElementById('overlay');
+    const loadingText = document.getElementById('loadingText');
+    const giftBox = document.getElementById('giftBox');
+    const finalLink = document.getElementById('finalLink');
+    const photoA = document.getElementById('photoA');
+    const photoB = document.getElementById('photoB');
+
+    /* state */
+    let dodgeCount = 0;
+    let nameCount = 0;
+
+    /* --- CLICK BUTTON DODGE (max 15) --- */
+    clickBtn.addEventListener('mouseover', () => {
+      if (dodgeCount < CLICK_DODGE_LIMIT) {
+        const x = Math.random() * (window.innerWidth - 160);
+        const y = Math.random() * (window.innerHeight - 140);
+        clickBtn.style.left = x + 'px';
+        clickBtn.style.top = y + 'px';
+        dodgeCount++;
+      }
+    });
+
+    clickBtn.addEventListener('click', () => {
+      // only proceed to name input when user has chased it enough
+      if (dodgeCount >= CLICK_DODGE_LIMIT) {
+        clickBtn.style.display = 'none';
+        nameSection.style.display = 'block';
+        // focus the input
+        setTimeout(()=> nameField.focus(), 50);
+      } else {
+        // sometimes users actually click earlier — count that as one dodge as well
+        dodgeCount = Math.min(CLICK_DODGE_LIMIT, dodgeCount + 1);
+      }
+    });
+	
+    /* --- EMOJI RAIN helper (for each correct name) --- */
+    function spawnEmojiBurst(amount=8){
+      const emojis = ["🤭","💅","✨","🎀","😋","💓","😝"];
+      for(let i=0;i<amount;i++){
+        const e = document.createElement('div');
+        e.className = 'emoji';
+        e.innerText = emojis[Math.floor(Math.random()*emojis.length)];
+        e.style.left = (Math.random()*100) + 'vw';
+        e.style.top = (-10 - Math.random()*10) + 'vh';
+        e.style.fontSize = (16 + Math.random()*28) + 'px';
+        document.body.appendChild(e);
+        // simple fall animation via CSS transform using requestAnimationFrame
+        const dur = 2200 + Math.random()*1600;
+        e.animate([{ transform: `translateY(0vh)`, opacity: 1 }, { transform: `translateY(110vh)`, opacity: 0 }], { duration: dur, easing: 'linear' });
+        setTimeout(()=> e.remove(), dur + 60);
+      }
+    }
+
+    /* --- NAME ENTRY handling --- */
+    submitName.addEventListener('click', handleNameSubmit);
+    nameField.addEventListener('keydown', (ev) => {
+      if(ev.key === 'Enter') handleNameSubmit();
+    });
+
+    function handleNameSubmit(){
+      const val = (nameField.value || '').trim().toLowerCase();
+      if(val === TARGET_NAME.toLowerCase()){
+        nameCount++;
+        updateProgress();
+        spawnEmojiBurst(9);
+        nameField.value = '';
+        // if done -> show overlay loader
+        if(nameCount >= REQUIRED_NAME_COUNT){
+          nameSection.style.display = 'none';
+          runFullOverlayThenReveal();
+        } else {
+          // small focus nicety
+          setTimeout(()=> nameField.focus(), 60);
+        }
+      } else {
+        // gentle sass, not blocking
+        alert('Nope 😝 Try again!');
+        nameField.value = '';
+        setTimeout(()=> nameField.focus(), 80);
+      }
+    }
+
+    function updateProgress(){
+      const pct = Math.min(100, Math.round((nameCount / REQUIRED_NAME_COUNT) * 100));
+      progressBar.style.width = pct + '%';
+      progressText.textContent = `${nameCount} / ${REQUIRED_NAME_COUNT}`;
+    }
+
+    /* --- FULLSCREEN TYPEWRITER OVERLAY (about 10s total) --- */
+    async function runFullOverlayThenReveal(){
+      // compute parameters to reach approx TYPEWRITER_TOTAL_SECONDS total
+      const messages = [
+        "Unlocking your surprise…",
+        "Adding sparkles…",
+        "Almost there…"
+      ];
+
+      // Show overlay
+      overlay.style.display = 'flex';
+      loadingText.textContent = '';
+      // spawn soft floating emojis in overlay while typing
+      const sparkInterval = setInterval(()=> spawnOverlayEmoji(), 400);
+
+      // compute roughly how many chars total
+      const totalChars = messages.reduce((s,m)=> s + m.length, 0);
+      // decide per-char delay => allocate 75% of total seconds to typing, rest to pauses/fade
+      const typingSeconds = TYPEWRITER_TOTAL_SECONDS * 0.75;
+      const perCharMs = Math.max(40, Math.round((typingSeconds * 1000) / totalChars)); // not too small
+      const pauseBetweenMs = Math.max(600, Math.round((TYPEWRITER_TOTAL_SECONDS*1000 - perCharMs*totalChars) / (messages.length))); // distribute pauses
+
+      // sequential type each message
+      for(let i=0;i<messages.length;i++){
+        const msg = messages[i];
+        loadingText.textContent = '';
+        for(let c=0;c<msg.length;c++){
+          loadingText.textContent += msg.charAt(c);
+          await sleep(perCharMs);
+        }
+        // small pause after message
+        await sleep(pauseBetweenMs);
+      }
+
+      // final hold so it totals ~requested seconds
+      await sleep(600);
+      clearInterval(sparkInterval);
+
+      // fade overlay out quickly
+      overlay.style.transition = 'opacity 300ms ease';
+      overlay.style.opacity = '1';
+      requestAnimationFrame(()=> {
+        overlay.style.opacity = '0';
+      });
+      setTimeout(()=> {
+        overlay.style.display = 'none';
+        overlay.style.opacity = '1';
+        overlay.style.transition = '';
+        // reveal final things
+        revealFinal();
+      }, 350);
+    }
+
+    function spawnOverlayEmoji(){
+      const el = document.createElement('div');
+      el.className = 'overlayEmoji';
+      el.innerText = ["✨","💓","🎀","💅","🤭"][Math.floor(Math.random()*5)];
+      el.style.left = (30 + Math.random()*40) + 'vw';
+      el.style.top = (60 + Math.random()*20) + 'vh';
+      el.style.fontSize = (22 + Math.random()*22) + 'px';
+      overlay.appendChild(el);
+      // float up animation using CSS keyframes (already defined)
+      el.animate([{ transform: 'translateY(0)', opacity: 1 }, { transform: 'translateY(-60vh)', opacity: 0 }], { duration: 2500 + Math.random()*1200, easing: 'linear' });
+      setTimeout(()=> el.remove(), 3000);
+    }
+
+    function sleep(ms){ return new Promise(res=>setTimeout(res, ms)); }
+
+    /* --- Reveal final link and sprinkle photos randomly outside box --- */
+    function revealFinal(){
+      // show gift box
+      giftBox.style.display = 'block';
+      // position photos randomly around (avoid overlapping center too much)
+      placePhotoRandom(photoA);
+      placePhotoRandom(photoB);
+      photoA.style.display = 'block';
+      photoB.style.display = 'block';
+      // tiny entrance sparkle burst
+      spawnEmojiBurst(20);
+    }
+
+    function placePhotoRandom(imgEl){
+      const margin = 40;
+      const w = Math.min(180, window.innerWidth * 0.22);
+      const h = Math.min(180, window.innerHeight * 0.22);
+      const x = Math.random() * (window.innerWidth - w - margin) + margin;
+      const y = Math.random() * (window.innerHeight - h - margin) + margin;
+      imgEl.style.width = w + 'px';
+      imgEl.style.height = h + 'px';
+      imgEl.style.left = x + 'px';
+      imgEl.style.top = y + 'px';
+      // slight random rotation
+      imgEl.style.transform = `rotate(${(Math.random()*24 - 12)}deg)`;
+    }
+
+    /* init text */
+    progressText.textContent = `0 / ${REQUIRED_NAME_COUNT}`;
+
+    /* accessibility: focus fields when visible */
+    document.addEventListener('visibilitychange', ()=> {
+      if(nameSection.style.display !== 'none') nameField.focus();
+    });
+
+    // expose final link / photo placeholders note:
+    // Replace `YOUR_LINK_HERE`, `photo1.jpg`, `photo2.jpg` with your actual urls/files in HTML above.
+  </script>
+</body>
+</html>

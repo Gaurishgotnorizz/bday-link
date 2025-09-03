@@ -87,7 +87,7 @@
   </style>
 </head>
 <body>
-  <div id="banner"><span>💅✨ Gimme some respect bitchhhh, I gave u the linkkk 🎀😋✨💓😝</span></div>
+  <div id="banner"><span>💅✨ Gimme respect, I gave u the linkkk 🎀😋✨💓😝</span></div>
 
   <h1>🎀 You want the link, huh? Get it</h1>
   <button id="clickMe">Click Me 🤭</button>
@@ -116,7 +116,7 @@
 
   <!-- Jumpscare -->
   <div id="jumpscare">
-    <img src="Saheli2.jpg" alt="BOO!">
+    <img src="Saheli5.jpg" alt="BOO!">
   </div>
 
   <script>
@@ -247,16 +247,17 @@
         const dy = (Math.random()*2-1) * (0.3 + Math.random()*1.2);
         states.push({el:s, x, y, dx, dy, w, h});
 
-        
+        // click handler
         s.addEventListener('click', () => {
-          
+          // small pop effect then remove
           s.animate([{ transform: s.style.transform }, { transform: 'scale(1.6) rotate(0deg)', opacity: 0 }], { duration: 180, easing: 'ease-out' });
           setTimeout(()=> {
             if(s.parentNode) s.parentNode.removeChild(s);
           }, 190);
           clicked++;
           const left = Math.max(0, NUM_SPARKLES - clicked);
-          preText.textContent = `Almost there now… 💫 (click all the emojis: ${left} left)`;
+          preText.textContent = `Almost there… 💫 (click all the emojis: ${left} left)`;
+          // mark removed by setting el=null (we'll filter in animation loop)
           const st = states.find(st=>st.el===s);
           if(st) st.removed = true;
           if(clicked >= NUM_SPARKLES){
@@ -304,9 +305,7 @@
     overlay.style.display = 'flex';
     loadingText.textContent = '';
 
-    const message =[ "Unlocking your surprise…"];
-        
-    ];
+    const message = "Unlocking your surprise… please wait while I make it extra special 🎀💅✨😋💓";
     await typeWriter(message, TYPEWRITER_TOTAL_SECONDS * 1000);
 
     overlay.style.display='none';
@@ -387,4 +386,3 @@
   </script>
 </body>
 </html>
-

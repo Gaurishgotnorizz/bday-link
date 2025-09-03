@@ -44,8 +44,42 @@
     .overlayEmoji{ position:absolute; font-size:2rem; opacity:.95; animation:floatUp 3s linear forwards; }
     @keyframes floatUp { from{ transform:translateY(20vh) scale(.9);} to{ transform:translateY(-10vh) scale(1.05); opacity:0;} }
     #preOverlay{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9998; flex-direction:column; background: rgba(255,228,241,.95); }
-    #preText{ font-size:2rem; color:var(--hot); margin-bottom:20px; }
-    .sparkleBtn{ position:absolute; cursor:pointer; font-size:2rem; user-select:none; }
+    #preText{ font-size:2rem; color:var(--hot); margin-bottom:20px; z-index:10001; }
+    .sparkleBtn{ position:absolute; cursor:pointer; font-size:2rem; user-select:none; z-index:10000; }
+
+    /* Rotating banner */
+    #banner{
+      position:fixed; top:0; left:0; width:100%; background:#ffb6d9;
+      color:#fff; font-weight:700; padding:6px 0; z-index:2000;
+      overflow:hidden; white-space:nowrap;
+    }
+    #banner span{
+      display:inline-block; padding-left:100%; animation:scrollBanner 12s linear infinite;
+    }
+    @keyframes scrollBanner{
+      from{ transform:translateX(0);}
+      to{ transform:translateX(-100%);}
+    }
+
+    /* Rainbow flash */
+    .rainbowFlash{
+      animation:flashRainbow 1s linear 1;
+    }
+    @keyframes flashRainbow{
+      0%{ background: red;}
+      20%{ background: orange;}
+      40%{ background: yellow;}
+      60%{ background: green;}
+      80%{ background: blue;}
+      100%{ background: violet;}
+    }
+
+    /* Jumpscare */
+    #jumpscare{
+      position:fixed; inset:0; background:#000;
+      display:none; align-items:center; justify-content:center; z-index:10000;
+    }
+    #jumpscare img{ max-width:80%; max-height:80%; border-radius:12px; }
     @media (max-width:520px){
       #clickMe{ left:calc(50% - 70px); }
       #progressWrap{ width:86%; }
@@ -53,6 +87,8 @@
   </style>
 </head>
 <body>
+  <div id="banner"><span>💅✨ Gimme some respect bitchhhh, I gave u the linkkk 🎀😋✨💓😝</span></div>
+
   <h1>🎀 You want the link, huh? Get it</h1>
   <button id="clickMe">Click Me 🤭</button>
   <div id="nameSection">
@@ -67,6 +103,7 @@
   </div>
   <div id="preOverlay">
     <div id="preText">Almost there… 💫 (click the emojis)</div>
+    <!-- sparkles will be injected here -->
   </div>
   <div id="overlay">
     <div id="loadingText"></div>
@@ -76,6 +113,12 @@
   </div>
   <img id="photoA" class="photo" src="pic1.jpg" alt="photoA">
   <img id="photoB" class="photo" src="pic2.jpg" alt="photoB">
+
+  <!-- Jumpscare -->
+  <div id="jumpscare">
+    <img src="Saheli2.jpg" alt="BOO!">
+  </div>
+
   <script>
     const CLICK_DODGE_LIMIT = 45;
     const REQUIRED_NAME_COUNT = 30;
@@ -91,12 +134,11 @@
     const overlay = document.getElementById('overlay');
     const loadingText = document.getElementById('loadingText');
     const giftBox = document.getElementById('giftBox');
-    const finalLink = document.getElementById('finalLink');
     const photoA = document.getElementById('photoA');
     const photoB = document.getElementById('photoB');
-
     const preOverlay = document.getElementById('preOverlay');
     const preText = document.getElementById('preText');
+    const jumpscare = document.getElementById('jumpscare');
 
     let dodgeCount = 0;
     let nameCount = 0;
@@ -150,6 +192,10 @@
         spawnEmojiBurst(9);
         nameField.value = '';
         if(nameCount >= REQUIRED_NAME_COUNT){
+          // rainbow flash
+          document.body.classList.add('rainbowFlash');
+          setTimeout(()=>document.body.classList.remove('rainbowFlash'), 1200);
+
           nameSection.style.display = 'none';
           runPreOverlayThenTypewriter();
         } else {
@@ -168,106 +214,127 @@
       progressText.textContent = `${nameCount} / ${REQUIRED_NAME_COUNT}`;
     }
 
+    /* ---------- PRE-OVERLAY: spawn clickable sparkle emojis (must click all) ---------- */
     async function runPreOverlayThenTypewriter(){
-  preOverlay.style.display = 'flex';
-  preText.textContent = "Almost there… 💫  (click the emojis)";
+      preOverlay.style.display = 'flex';
+      preText.textContent = `Almost there… 💫 (click all the emojis: 30 left)`;
 
-  const sparkles = [];
-  const NUM_SPARKLES = 30;
+      const NUM_SPARKLES = 30;
+      const sparkleEmojis = ["✨","🎀","💓","💅","🤭"];
+      const states = []; // {el,x,y,dx,dy,w,h}
+      let clicked = 0;
 
-  for(let i=0;i<NUM_SPARKLES;i++){
-    const s = document.createElement('div');
-    s.className='sparkleBtn';
-    s.innerText='✨','🎀';
-    s.style.left = (Math.random()*80 + 10) + 'vw';
-    s.style.top = (Math.random()*60 + 10) + 'vh';
-    preOverlay.appendChild(s);
-    sparkles.push(s);
-
-    // Make it float around randomly
-    let dx = (Math.random()*2-1)*0.5;
-    let dy = (Math.random()*2-1)*0.5;
-    function move(){
-      const rect = s.getBoundingClientRect();
-      let x = rect.left + dx*4;
-      let y = rect.top + dy*4;
-      // bounce off edges of preOverlay
+      // ensure layout measured
       const parentRect = preOverlay.getBoundingClientRect();
-      if(x < 0 || x + rect.width > parentRect.width) dx = -dx;
-      if(y < 0 || y + rect.height > parentRect.height) dy = -dy;
-      s.style.left = Math.min(Math.max(0,x), parentRect.width - rect.width) + 'px';
-      s.style.top = Math.min(Math.max(0,y), parentRect.height - rect.height) + 'px';
-      requestAnimationFrame(move);
+
+      // create sparkles
+      for(let i=0;i<NUM_SPARKLES;i++){
+        const s = document.createElement('div');
+        s.className = 'sparkleBtn';
+        s.innerText = sparkleEmojis[Math.floor(Math.random()*sparkleEmojis.length)];
+        // random initial position inside preOverlay
+        const w = 28; const h = 28;
+        const x = Math.random() * (parentRect.width - w);
+        const y = Math.random() * (parentRect.height - h);
+        s.style.left = x + 'px';
+        s.style.top = y + 'px';
+        // slight scale/rotate for variety
+        s.style.transform = `translate(-50%,-50%) scale(${0.9 + Math.random()*0.4}) rotate(${(Math.random()*40-20)}deg)`;
+        preOverlay.appendChild(s);
+
+        // random velocity
+        const dx = (Math.random()*2-1) * (0.3 + Math.random()*1.2);
+        const dy = (Math.random()*2-1) * (0.3 + Math.random()*1.2);
+        states.push({el:s, x, y, dx, dy, w, h});
+
+        // click handler
+        s.addEventListener('click', () => {
+          // small pop effect then remove
+          s.animate([{ transform: s.style.transform }, { transform: 'scale(1.6) rotate(0deg)', opacity: 0 }], { duration: 180, easing: 'ease-out' });
+          setTimeout(()=> {
+            if(s.parentNode) s.parentNode.removeChild(s);
+          }, 190);
+          clicked++;
+          const left = Math.max(0, NUM_SPARKLES - clicked);
+          preText.textContent = `Almost there… 💫 (click all the emojis: ${left} left)`;
+          // mark removed by setting el=null (we'll filter in animation loop)
+          const st = states.find(st=>st.el===s);
+          if(st) st.removed = true;
+          if(clicked >= NUM_SPARKLES){
+            // stop animation and proceed
+            // small delay to allow last pop to disappear visually
+            setTimeout(() => {
+              // clean up any remaining elements
+              states.forEach(sobj => { if(sobj.el && sobj.el.parentNode) sobj.el.parentNode.removeChild(sobj.el); });
+              // hide pre overlay and continue
+              preOverlay.style.display = 'none';
+              runFullOverlayThenReveal();
+            }, 250);
+          }
+        }, { once: true });
+      }
+
+      // animation loop for sparkles
+      let running = true;
+      function animate(){
+        if(!running) return;
+        const rect = preOverlay.getBoundingClientRect();
+        for(let i = states.length-1; i>=0; i--){
+          const st = states[i];
+          if(st.removed) { states.splice(i,1); continue; }
+          // update
+          st.x += st.dx;
+          st.y += st.dy;
+          // bounce inside preOverlay bounds
+          if(st.x < 10){ st.x = 10; st.dx = Math.abs(st.dx); }
+          if(st.y < 10){ st.y = 10; st.dy = Math.abs(st.dy); }
+          if(st.x > rect.width - 10){ st.x = rect.width - 10; st.dx = -Math.abs(st.dx); }
+          if(st.y > rect.height - 10){ st.y = rect.height - 10; st.dy = -Math.abs(st.dy); }
+          if(st.el){
+            st.el.style.left = st.x + 'px';
+            st.el.style.top = st.y + 'px';
+          }
+        }
+        requestAnimationFrame(animate);
+      }
+      animate();
+      // function returns (we will continue when clicks finish)
     }
-    move();
-  }
-
-  await new Promise(res=>{
-    let clicked = 0;
-    sparkles.forEach(s=>{
-      s.addEventListener('click', ()=>{
-        s.remove();
-        clicked++;
-        if(clicked >= sparkles.length) res();
-      });
-    });
-  });
-
-  preOverlay.style.display='none';
-  runFullOverlayThenReveal();
-}
 
     async function runFullOverlayThenReveal(){
-      const messages = [
-        "Unlocking your surprise…",
+    overlay.style.display = 'flex';
+    loadingText.textContent = '';
+
+    const message =[ "Unlocking your surprise…",
         "Adding sparkles…",
         "Almost there…"
-      ];
-      overlay.style.display = 'flex';
-      loadingText.textContent = '';
-      const sparkInterval = setInterval(()=> spawnOverlayEmoji(), 300);
+    ];
+    await typeWriter(message, TYPEWRITER_TOTAL_SECONDS * 1000);
 
-      const totalChars = messages.reduce((s,m)=> s + m.length, 0);
-      const typingSeconds = TYPEWRITER_TOTAL_SECONDS * 0.75;
-      const perCharMs = Math.max(50, Math.round((typingSeconds * 1000) / totalChars));
-      const pauseBetweenMs = Math.max(600, Math.round((TYPEWRITER_TOTAL_SECONDS*1000 - perCharMs*totalChars) / messages.length));
+    overlay.style.display='none';
 
-      for(let i=0;i<messages.length;i++){
-        const msg = messages[i];
-        loadingText.textContent = '';
-        for(let c=0;c<msg.length;c++){
-          loadingText.textContent += msg.charAt(c);
-          await sleep(perCharMs);
+    // Jumpscare AFTER full 35s
+    jumpscare.style.display = 'flex';
+    setTimeout(()=> jumpscare.style.display='none', 1200);
+
+    revealFinal();
+  }
+
+  // typewriter that stretches typing across duration
+  function typeWriter(text, duration){
+    return new Promise(resolve=>{
+      let i = 0;
+      const interval = duration / text.length;
+      const typer = setInterval(()=>{
+        loadingText.textContent = text.slice(0, i+1);
+        i++;
+        if(i >= text.length){
+          clearInterval(typer);
+          resolve();
         }
-        await sleep(pauseBetweenMs);
-      }
-      await sleep(600);
-      clearInterval(sparkInterval);
-
-      overlay.style.transition = 'opacity 300ms ease';
-      overlay.style.opacity = '1';
-      requestAnimationFrame(()=> { overlay.style.opacity = '0'; });
-      setTimeout(()=> {
-        overlay.style.display = 'none';
-        overlay.style.opacity = '1';
-        overlay.style.transition = '';
-        revealFinal();
-      }, 350);
-    }
-
-    function spawnOverlayEmoji(){
-      const el = document.createElement('div');
-      el.className = 'overlayEmoji';
-      el.innerText = ["✨","💓","🎀","💅","🤭"][Math.floor(Math.random()*5)];
-      el.style.left = (30 + Math.random()*40) + 'vw';
-      el.style.top = (60 + Math.random()*20) + 'vh';
-      el.style.fontSize = (22 + Math.random()*22) + 'px';
-      overlay.appendChild(el);
-      el.animate([{ transform: 'translateY(0)', opacity: 1 }, { transform: 'translateY(-60vh)', opacity: 0 }], { duration: 2500 + Math.random()*1200, easing: 'linear' });
-      setTimeout(()=> el.remove(), 3000);
-    }
-
-    function sleep(ms){ return new Promise(res=>setTimeout(res, ms)); }
+      }, interval);
+    });
+  }
 
     function revealFinal(){
       giftBox.style.display = 'block';
@@ -276,6 +343,9 @@
       photoA.style.display = 'block';
       photoB.style.display = 'block';
       spawnEmojiBurst(20);
+      confettiBlast();
+      // sparkle burst (extra) on reveal
+      spawnEmojiBurst(30);
     }
 
     function placePhotoRandom(imgEl){
@@ -291,6 +361,27 @@
       imgEl.style.transform = `rotate(${(Math.random()*24 - 12)}deg)`;
     }
 
+    function confettiBlast(){
+      const colors = ["#ff69b4","#ff3fa1","#ffd3ec","#fff"];
+      for(let i=0;i<150;i++){
+        const c = document.createElement('div');
+        c.style.position='fixed';
+        c.style.width='8px'; c.style.height='14px';
+        c.style.background=colors[Math.floor(Math.random()*colors.length)];
+        c.style.left=(Math.random()*100)+'vw';
+        c.style.top='-20px';
+        c.style.opacity=0.9;
+        document.body.appendChild(c);
+        const fall = (Math.random()*3000)+2000;
+        const horiz = (Math.random()*100)-50;
+        c.animate([
+          { transform:`translate(0,0) rotate(0deg)`},
+          { transform:`translate(${horiz}px, 110vh) rotate(${360*Math.random()}deg)` }
+        ], { duration: fall, easing:'ease-out' });
+        setTimeout(()=>c.remove(), fall+500);
+      }
+    }
+
     progressText.textContent = `0 / ${REQUIRED_NAME_COUNT}`;
     document.addEventListener('visibilitychange', ()=> {
       if(nameSection.style.display !== 'none') nameField.focus();
@@ -298,4 +389,3 @@
   </script>
 </body>
 </html>
-

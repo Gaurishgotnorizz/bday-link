@@ -77,13 +77,13 @@
   </style>
 </head>
 <body>
-  <div id="banner"><span>💅✨ Gimme respect bitchhh, I gave u the linkkk 🎀😋✨💓😝</span></div>
+  <div id="banner"><span>💅✨ Gimme respect bitchh, I gave u the linkkk 🎀😋✨💓😝</span></div>
 
   <h1>🎀 You want the link, huh? Get it lmao</h1>
   <button id="clickMe">Click Me 🤭</button>
   <div id="nameSection">
     <div class="controlRow">
-      <input id="nameField" type="text" placeholder="Type your name..." autocomplete="off" />
+      <input id="nameField" type="text" placeholder="Type the name..." autocomplete="off" />
       <button id="submitName" class="btn">ENTER</button>
     </div>
     <div id="progressWrap">
@@ -123,7 +123,6 @@
     const photoB = document.getElementById('photoB');
     const preOverlay = document.getElementById('preOverlay');
     const preText = document.getElementById('preText');
-  
 
     let dodgeCount = 0;
     let nameCount = 0;
@@ -290,10 +289,12 @@
     overlay.style.display = 'flex';
     loadingText.textContent = '';
 
-    const message = "Please wait while I make it cutesy 🎀😋💓";
+    const message = "Please wait while I make it cutesy🎀💓";
     await typeWriter(message, TYPEWRITER_TOTAL_SECONDS * 1000);
 
     overlay.style.display='none';
+
+  }
 
   // typewriter that stretches typing across duration
   function typeWriter(text, duration){
@@ -364,6 +365,3 @@
   </script>
 </body>
 </html>
-
-
-

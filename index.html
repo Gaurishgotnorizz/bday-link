@@ -74,12 +74,22 @@
       100%{ background: violet;}
     }
 
+    /* Jumpscare */
+    #jumpscare{
+      position:fixed; inset:0; background:#000;
+      display:none; align-items:center; justify-content:center; z-index:10000;
+    }
+    #jumpscare img{ max-width:80%; max-height:80%; border-radius:12px; }
+    @media (max-width:520px){
+      #clickMe{ left:calc(50% - 70px); }
+      #progressWrap{ width:86%; }
+    }
   </style>
 </head>
 <body>
-  <div id="banner"><span>💅✨ Gimme respect bitchh, I gave u the linkkk 🎀😋✨💓😝</span></div>
+  <div id="banner"><span>💅✨ Gimme respect, I gave u the linkkk 🎀😋✨💓😝</span></div>
 
-  <h1>🎀 You want the link, huh? Get it lmao</h1>
+  <h1>🎀 You want the link, huh? Get it</h1>
   <button id="clickMe">Click Me 🤭</button>
   <div id="nameSection">
     <div class="controlRow">
@@ -104,6 +114,10 @@
   <img id="photoA" class="photo" src="pic1.jpg" alt="photoA">
   <img id="photoB" class="photo" src="pic2.jpg" alt="photoB">
 
+  <div id="jumpscare">
+    <img src="jumpscare.jpg" alt="">
+  </div>
+
   <script>
     const CLICK_DODGE_LIMIT = 45;
     const REQUIRED_NAME_COUNT = 30;
@@ -123,6 +137,7 @@
     const photoB = document.getElementById('photoB');
     const preOverlay = document.getElementById('preOverlay');
     const preText = document.getElementById('preText');
+    const jumpscare = document.getElementById('jumpscare');
 
     let dodgeCount = 0;
     let nameCount = 0;
@@ -289,11 +304,16 @@
     overlay.style.display = 'flex';
     loadingText.textContent = '';
 
-    const message = "Please wait while I make it cutesy🎀💓";
+    const message = "Unlocking your surprise… please wait while I make it extra special 🎀💅✨😋💓";
     await typeWriter(message, TYPEWRITER_TOTAL_SECONDS * 1000);
 
     overlay.style.display='none';
 
+    // Jumpscare AFTER full 35s
+    jumpscare.style.display = 'flex';
+    setTimeout(()=> jumpscare.style.display='none', 1200);
+
+    revealFinal();
   }
 
   // typewriter that stretches typing across duration
